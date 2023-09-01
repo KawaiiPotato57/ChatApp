@@ -2,12 +2,11 @@
   <div class="about">
     <h1>Messages</h1>
     <SearchBar />
-    <ContactCards />
+
   </div>
 </template>
 <script setup lang="ts">
-import SearchBar from '../components/SearchBar.vue';
-import ContactCards from '@/components/ContactCards.vue';
+import SearchBar from './SearchBar.vue';
 </script>
 
 <style>

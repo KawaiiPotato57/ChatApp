@@ -8,11 +8,11 @@
     <form @submit.prevent="handleSubmit" class="login-form">
       <div class="form-group">
         <label for="mobile">Mobile Number:</label>
-        <input type="text" v-model="mobile" id="mobile" name="mobile" required />
+        <input type="text" v-model="user.userMobileNo" id="mobile" name="mobile" required />
       </div>
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" v-model="password" id="password" name="password" required />
+        <input type="password" v-model="user.password" id="password" name="password" required />
       </div>
       <div style="display: flex; justify-content: end">
         <button type="submit">Sign In</button>
@@ -29,14 +29,34 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import ChatIcon from '@/assets/chatIcon.png';
-const mobile = ref('');
-const password = ref('');
+const router = useRouter();
+
+const store = useStore();
+interface User {
+  userMobileNo: string;
+  password: string;
+}
+const user = ref<User>({
+  userMobileNo: '',
+  password: ''
+});
 
 const handleSubmit = () => {
-  console.log('Mobile:', mobile.value);
-  console.log('Password:', password.value);
-  // Perform validation or API call here
+  console.log('THE USER:', user.value);
+  try {
+    store.dispatch('loginUser', user.value).then(() => {
+      router.push('/');
+    });
+    user.value = {
+      userMobileNo: '',
+      password: ''
+    };
+  } catch (error) {
+    console.log('Error in sign-in catch: ', error);
+  }
 };
 </script>
 

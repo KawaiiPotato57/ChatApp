@@ -10,10 +10,15 @@
 <script setup lang="ts">
 import { Promotion } from '@element-plus/icons-vue';
 import { ref } from 'vue';
+import { useStore } from 'vuex';
+const store = useStore();
 const newMessage = ref('');
 
 const sendMessage = () => {
-  // Logic to send message
+  store.dispatch('sendMessage', newMessage.value).then(() => {
+    store.dispatch('getChatsWithUser');
+  });
+  newMessage.value = '';
 };
 </script>
 

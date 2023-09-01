@@ -2,20 +2,47 @@
   <div class="chatHeader">
     <div class="imageWrapper">
       <img :src="currentUser.image" alt="User Avatar" class="userImage" />
-      <div class="statusDot" v-if="currentUser.isOnline"></div>
+      <div class="statusDot" v-if="contacts?.isOnlineUser"></div>
     </div>
     <div class="userInfo">
-      <div class="userName">{{ currentUser.name }}</div>
-      <div class="userStatus" v-if="currentUser.isOnline" :class="currentUser.isOnline">Online</div>
-      <div class="userStatus" v-else :class="currentUser.isOnline">Offline</div>
+      <div class="userName">
+        {{ contacts?.userMobileNo }}
+        <span style="font-size: smaller; font-weight: 400; color: rgb(67, 67, 67)"
+          >(Average Response Time: {{ contacts?.averageResponseTime }})</span
+        >
+      </div>
+      <div class="userStatus" v-if="contacts?.isOnlineUser" :class="contacts?.isOnlineUser">
+        Online
+      </div>
+      <div class="userStatus" v-else :class="contacts?.isOnlineUser">Offline</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import chatIcon from '../assets/chatIcon.png';
+import chatIcon from '@/assets/chatIcon.png';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useStore } from 'vuex';
+const store = useStore();
+interface UserList {
+  userId: number;
+  userMobileNo: string;
+  userName: string;
+  isOnlineUser: boolean;
+  newMsgCount: number;
+  averageResponseTime: number;
+}
+let contacts = ref<UserList>();
+
+watch(
+  () => store.state.currentChatUser,
+  (newVal) => {
+    contacts.value = newVal;
+    console.log('The contacts loaded:', contacts.value);
+  },
+  { immediate: true }
+);
 interface User {
   name: string;
   image: string;

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { ChatRound, SwitchButton } from '@element-plus/icons-vue';
-import AboutViewVue from './AboutView.vue';
-import ChatContainer from '../components/ChatContainer.vue';
-import chatIcon from '../assets/chatIcon.png';
-const isCollapse = ref(true);
-const collapseChat = ref(true);
+import ContactsView from '../components/contacts/ContactsView.vue';
+import ChatContainer from '../components/chat/ChatContainer.vue';
+import chatIcon from '@/assets/chatIcon.png';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const store = useStore();
 
+const isCollapse = ref(true);
 const showAboutView = ref(true);
 const showChatContainer = ref(true);
 const handleOpen = (key: string, keyPath: string[]) => {
@@ -33,6 +36,11 @@ const toggleAboutView = () => {
     showAboutView.value = !showAboutView.value;
     showChatContainer.value = !showAboutView.value;
   }
+};
+const logoutUser = () => {
+  store.dispatch('removeConnectionId').then(() => {
+    router.push('/signin');
+  });
 };
 
 onMounted(() => {
@@ -74,13 +82,13 @@ onUnmounted(() => {
         <el-menu-item index="8" disabled> </el-menu-item>
         <el-menu-item index="9" disabled> </el-menu-item>
         <el-menu-item index="10" disabled> </el-menu-item>
-        <el-menu-item index="11">
+        <el-menu-item index="11" @click="logoutUser">
           <el-icon><SwitchButton /></el-icon>
           <template #title>Logout</template>
         </el-menu-item>
       </el-menu>
     </div>
-    <AboutViewVue v-if="showAboutView" />
+    <ContactsView v-if="showAboutView" />
     <ChatContainer v-if="showChatContainer" />
   </div>
 </template>

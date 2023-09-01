@@ -1,60 +1,115 @@
 <template>
-  <div class="searchDiv">
+  <!-- <div class="searchDiv">
     <el-autocomplete
       v-model="state"
-      :fetch-suggestions="querySearch"
       class="transparent"
-      popper-class="my-autocomplete"
       placeholder="Search Contacts."
       @select="handleSelect"
     >
       <template #suffix>
-        <el-icon class="searchIcon" @click="handleIconClick"> <Search /> </el-icon>
+        <el-icon class="searchIcon" @click="handleIconClick" @keydown.enter="handleIconClick">
+          <Search />
+        </el-icon>
       </template>
       <template #default="{ item }">
         <div class="value">{{ item.value }}</div>
       </template>
     </el-autocomplete>
+  </div> -->
+  <div style="display: flex; flex-direction: column">
+    <div class="searchDiv">
+      <el-input
+        v-model="state"
+        class="transparent"
+        @input="changeCards"
+        size="large"
+        placeholder="Enter Number : 03001234567"
+        :suffix-icon="'el-icon-search'"
+      >
+      </el-input>
+      <button
+        class="searchButton"
+        :icon="Search"
+        @click="handleIconClick"
+        @keyup.enter="handleIconClick"
+      >
+        Search
+      </button>
+    </div>
+    <p style="color: brown; margin: 10px" v-if="showError">
+      Please enter the contact number then search
+    </p>
   </div>
+  <ContactCards :isValue="isValue" />
 </template>
 
 <script setup lang="ts">
+import ContactCards from './ContactCards.vue';
 import { ref } from 'vue';
 import { Search } from '@element-plus/icons-vue';
+import { useStore } from 'vuex';
+const store = useStore();
 
-const state = ref('Tokyo');
-const cities = ['New York', 'London', 'Tokyo', 'Paris']; // Dummy data
-
-const querySearch = (queryString: string, cb: (arg0: { value: String }[]) => void) => {
-  const results = cities.filter(
-    (city) => city.toLowerCase().indexOf(queryString.toLowerCase()) === 0
-  );
-  cb(results.map((value) => ({ value }))); // Wrapping cities in objects with 'value' property
+const state = ref('');
+const showError = ref(false);
+const isValue = ref(false);
+const changeCards = () => {
+  if (state.value == '' || state.value == null || state.value == undefined) {
+    isValue.value = false;
+  }
 };
-
-const handleSelect = (item: { value: string }) => {
-  state.value = item.value;
-};
-
 const handleIconClick = (ev: Event) => {
-  console.log(ev);
+  if (state.value == '') {
+    showError.value = true;
+    isValue.value = false;
+  } else {
+    showError.value = false;
+    isValue.value = true;
+    store.dispatch('searchUsers', state.value);
+  }
+  console.log(state.value);
 };
 </script>
 
 <style>
 .searchDiv {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
   padding: 14px;
 }
-.transparent .el-input__inner {
-  color: rgb(189, 189, 189);
-  width: 240px;
+
+.searchButton {
+  background-color: #121212;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  margin-left: 10px;
+  width: 100px;
   height: 40px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.searchButton:hover {
+  background-color: #9d9d9d;
+  color: rgb(31, 31, 31);
+}
+.transparent .el-input__inner {
+  color: rgb(61, 61, 61);
 }
 .transparent .el-input__wrapper {
   border: 1px solid rgb(83, 83, 83);
   background-color: transparent;
-  color: white;
+  color: rgb(51, 51, 51);
   box-shadow: 0 4px 6px rgba(255, 255, 255, 0.463);
+  width: 100px;
+  height: 40px;
+}
+.transparent .el-input__suffix-inner {
+  font-size: 50px;
+  color: rgb(31, 31, 31);
 }
 .my-autocomplete.el-popper {
   background-color: #1212126d;

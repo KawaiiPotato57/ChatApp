@@ -5,18 +5,18 @@
       <h1>Chat App</h1>
       <p style="font-weight: 400; font-size: small">Sign up to connect with friends.. :)</p>
     </div>
-    <form @submit.prevent="handleSubmit" class="login-form">
+    <form @submit.prevent="registerUser" class="login-form">
       <div class="form-group">
         <label for="userName">User Name:</label>
-        <input type="text" v-model="userName" id="userName" name="userName" required />
+        <input type="text" v-model="user.userName" id="userName" name="userName" required />
       </div>
       <div class="form-group">
         <label for="mobile">Mobile Number:</label>
-        <input type="text" v-model="mobile" id="mobile" name="mobile" required />
+        <input type="text" v-model="user.userMobileNo" id="mobile" name="mobile" required />
       </div>
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" v-model="password" id="password" name="password" required />
+        <input type="password" v-model="user.password" id="password" name="password" required />
       </div>
       <div style="display: flex; justify-content: end">
         <button type="submit">Sign Up</button>
@@ -33,15 +33,35 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import ChatIcon from '@/assets/chatIcon.png';
-const userName = ref('');
-const mobile = ref('');
-const password = ref('');
+const router = useRouter();
+const store = useStore();
+interface User {
+  userMobileNo: string;
+  userName: string;
+  password: string;
+}
+const user = ref<User>({
+  userMobileNo: '',
+  userName: '',
+  password: ''
+});
 
-const handleSubmit = () => {
-  console.log('Mobile:', mobile.value);
-  console.log('Password:', password.value);
-  // Perform validation or API call here
+const registerUser = () => {
+  try {
+    store.dispatch('registerUser', user.value).then(() => {
+      router.push('/signin');
+    });
+    user.value = {
+      userMobileNo: '',
+      userName: '',
+      password: ''
+    };
+  } catch (error) {
+    console.log(error);
+  }
 };
 </script>
 
