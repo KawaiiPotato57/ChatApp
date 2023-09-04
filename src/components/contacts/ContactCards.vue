@@ -1,4 +1,3 @@
-@ts-ignore
 <template>
   <div class="chatBar" v-if="contactsCheck">
     <div
@@ -7,23 +6,28 @@
       v-for="contact in loadContacts"
       :key="contact.userId"
     >
-      <!-- above will be an on click, which will dispatch an action in the store to change the current chat
-         and in the chat container it will receive the data using the getter or store.state -->
       <div class="imageWrapper">
         <img :src="chatIcon" alt="contact avatar" class="contactImage" />
         <div class="statusDot" v-if="contact.isOnlineUser"></div>
       </div>
       <div class="contactDetails">
         <div class="contactName">{{ contact.userMobileNo }}</div>
-        <!-- <div class="lastMessage">{{ latestMsg }}</div> -->
+        {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
       </div>
       <div class="latestDiv">
-        <div class="lastMessage">
-          {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
+        <div class="lastMessage"></div>
+        <div class="messageTime">
+          <span
+            class="countClass"
+            v-if="
+              counters[contact.userId] > 0 &&
+              store.state.receivedMessage.some((item) => item.userId === contact.userId)
+            "
+            >{{ counters[contact.userId] }}</span
+          >
+          {{ mappedLatestMsg[contact.userId]?.dateTime || '12.00 pm' }}
         </div>
-        <div class="messageTime">{{ mappedLatestMsg[contact.userId]?.dateTime || '12.00 pm' }}</div>
       </div>
-      <!-- <div class="messageTime">{{ localTime }}</div> -->
     </div>
   </div>
   <div class="chatBar" v-else>
@@ -46,7 +50,19 @@ const loadContacts = computed(() => contacts.value);
 const loadedSearch = computed(() => store.state.loadedSearch);
 const boolChan = computed(() => store.state.recentBool);
 const latestMsg1 = ref();
-const recentChats = computed(() => store.state.recentChats);
+const receivedMssg = computed(() => store.state.receivedMessage);
+const received = ref(false);
+
+interface UserList {
+  userId: number;
+  userMobileNo: string;
+  userName: string;
+  isOnlineUser: boolean;
+  newMsgCount: number;
+  averageResponseTime: number;
+}
+
+received.value = receivedMssg.value;
 
 let isInitialRun = true;
 const getTheChats = () => {
@@ -60,30 +76,26 @@ const getTheChats = () => {
   console.log('MSG1:', latestMsg1.value);
 };
 const recentMap = ref({});
+
 const mappedLatestMsg = computed(() => {
   console.log('THE RECALCULATION');
   const map = {};
-  latestMsg1.value.forEach((msg) => {
+  latestMsg1.value.forEach((msg: { receiverID: string | number }) => {
     map[msg.receiverID] = msg; // Assuming 'userId' is a common attribute between latestMsg1 and contact.
   });
   return map;
 });
 
-const toLocalDate = (msgTime) => {
+const toLocalDate = (msgTime: string | number | Date) => {
   const dateObject = new Date(msgTime);
   return dateObject.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
-interface UserList {
-  userId: number;
-  userMobileNo: string;
-  userName: string;
-  isOnlineUser: boolean;
-  newMsgCount: number;
-  averageResponseTime: number;
-}
+
 const contacts = ref<UserList[]>([]);
 const contactsCheck = ref(false);
 const selectUser = (contact: UserList) => {
+  counters.value[contact.userId] = 0;
+  store.dispatch('removeCount', contact.userId);
   store
     .dispatch('setCurrentUser', contact)
     .then(() => {
@@ -95,6 +107,34 @@ const selectUser = (contact: UserList) => {
       store.dispatch('getChatsWithUser', false);
     });
 };
+
+const counter = ref(0);
+const counters = ref({});
+
+watch(
+  () => store.state.receivedMessage,
+  (val) => {
+    // Reset the counters for all users
+    for (const userId in counters.value) {
+      counters.value[userId] = 0;
+    }
+
+    // Update the counters based on the received messages
+    val.forEach((element: { userId: number }) => {
+      if (
+        element.userId !== store.state.currentChatUser.userId &&
+        loadContacts.value.some((item) => element.userId === item.userId)
+      ) {
+        if (!counters.value[element.userId]) {
+          counters.value[element.userId] = 0;
+        }
+        counters.value[element.userId]++;
+      }
+    });
+  },
+  { immediate: true, deep: true }
+);
+
 watch(
   () => store.state.receivedMessage,
   (newVal) => {
@@ -136,21 +176,6 @@ watch(
       console.log('The contacts loaded : ', contacts.value);
       // contactsCheck.value = contacts.value.length > 0;
       contactsCheck.value = true;
-      if (boolChan) {
-        // console.log('OLD RECENTS: ', oldRecents, 'RECENTS: ', recents);
-        // if (isInitialRun) {
-        //   latestMsg1.value = store.state.recentChats;
-        //   console.log('THE RECENT', latestMsg1.value);
-        //   getTheChats();
-        //   recentMap.value = mappedLatestMsg.value;
-        //   isInitialRun = false;
-        // } else {
-        //   latestMsg1.value = store.state.recentChats;
-        //   console.log('THE NEW RECENT', latestMsg1.value);
-        //   getTheChats();
-        //   recentMap.value = mappedLatestMsg.value;
-        // }
-      }
     }
   },
   { immediate: true }
@@ -206,7 +231,17 @@ watch(
   height: 1px;
   background-color: rgb(72, 72, 72);
 }
-
+.countClass {
+  font-size: large;
+  border-radius: 50%;
+  color: white;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(0, 72, 90);
+}
 .contactImage {
   border-radius: 50%;
   width: 50px;
@@ -233,6 +268,7 @@ watch(
   flex-direction: column; /* changed from row to column */
   align-items: flex-end;
 }
+
 .lastMessage {
   position: absolute;
   bottom: 0;

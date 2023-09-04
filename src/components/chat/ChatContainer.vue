@@ -63,9 +63,7 @@ watch(
   () => store.state.currentChatUser,
   (newVal) => {
     contacts.value = newVal;
-    console.log('The contacts loaded : ', contacts.value);
     if (contacts.value) {
-      console.log('In the contacts container TRUE : ');
       contactsCheck.value = true;
     } else {
       contactsCheck.value = false;
@@ -74,7 +72,6 @@ watch(
 );
 
 const newApiMessages: ApiMessage[] = computedChats.value;
-console.log('The newApiMessages : ', newApiMessages);
 
 const updateChatMessages = (newApiMessages: ApiMessage[]) => {
   chatMessages.value = newApiMessages.map((apiMsg) => ({
@@ -85,7 +82,6 @@ const updateChatMessages = (newApiMessages: ApiMessage[]) => {
   }));
 };
 updateChatMessages(newApiMessages);
-console.log('User connection id saved:', localStorage.getItem('userToken'));
 
 const dummyMessage: ApiMessage[] = [
   {
@@ -113,15 +109,12 @@ watch(
 );
 
 const loadMoreMessages = () => {
-  console.log('IN LOAD MORE MESSAGES');
-  store.dispatch('getChatsWithUser');
+  store.dispatch('getChatsWithUser', true);
 };
 
 const handleScroll = (e: Event) => {
-  console.log('IN HANDLE SCROLL');
   const target = e.target as HTMLElement;
   // Change 500000 to the scroll position at which you want to trigger the function
-  console.log('The target : ', target.scrollTop, 'CHAT AREA', chatArea.value?.scrollHeight);
   if (target.scrollTop < 100000000) {
     loadMoreMessages();
   }
@@ -176,12 +169,12 @@ onUnmounted(() => {
 
 .chatMessage {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   margin-bottom: 10px;
 }
 
 .chatMessage.them {
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .chatMessage.them > .messageContent {

@@ -61,7 +61,7 @@ type ChatState = {
   recentChats: UsersChat[];
   idArray: IDs[];
   recentBool: boolean;
-  receivedMessage: receivedMessage;
+  receivedMessage: receivedMessage[];
 };
 
 const state: ChatState = {
@@ -93,7 +93,7 @@ const state: ChatState = {
   recentChats: [],
   idArray: [],
   recentBool: false,
-  receivedMessage: {} as receivedMessage
+  receivedMessage: []
 };
 
 export default createStore({
@@ -157,9 +157,11 @@ export default createStore({
     setRecentBool(state, bool) {
       state.recentBool = bool;
     },
-    setReceivedMessage(state, message) {
-      state.receivedMessage = message;
-      console.log('RECEIVED MESSAGE: ', state.receivedMessage);
+    setReceivedMessage(state, payload) {
+      state.receivedMessage = [...state.receivedMessage, payload];
+    },
+    setUnReadCount(state, payload) {
+      state.receivedMessage = payload;
     }
   },
   actions: {
@@ -421,6 +423,12 @@ export default createStore({
         await dispatch('getRecentChatsWithUser', IDs);
       }
       commit('setRecentBool', true);
+    },
+    removeCount({ commit, dispatch }, userId) {
+      console.log('BEFORE FILTERING', state.receivedMessage);
+      const filteredMessages = state.receivedMessage.filter((message) => message.userId !== userId);
+      console.log('AFTER FILTERING', filteredMessages);
+      commit('setUnReadCount', filteredMessages);
     }
   },
 
