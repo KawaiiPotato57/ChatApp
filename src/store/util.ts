@@ -19,7 +19,6 @@ const decodedUser: decodedToken = {
 export const decodeToken = (token: String) => {
   const [header, payload, signature] = token.split('.');
   const decodedPayload = base64UrlDecode(payload);
-  console.log('THE DECODED in function : ', decodedPayload);
   decodedUser.userId = parseInt(decodedPayload.Id);
   decodedUser.userName = decodedPayload.sub;
   decodedUser.userMobileNo = decodedPayload.email;
@@ -41,7 +40,6 @@ export const signalRConnection = async () => {
   signalr
     .start()
     .then(() => {
-      console.log('connectionId in signlae R', signalr.connectionId);
       store.dispatch('saveConnectionState', signalr.connectionId).then(() => {
         store.dispatch('saveConnectionId');
       });
@@ -49,7 +47,8 @@ export const signalRConnection = async () => {
         console.log('User online');
       });
       signalr.on('ReceiveMessage', (data) => {
-        console.log('MESSAGE:', data);
+        store.commit('setReceivedMessage', data);
+        // console.log('data', data);
         store.dispatch('getChatsWithUser', false);
       });
     })

@@ -15,6 +15,10 @@ interface Message {
   recieverId: number;
   message: string;
 }
+interface receivedMessage {
+  userId: number;
+  messageText: string;
+}
 interface UserList {
   userId: number;
   userMobileNo: string;
@@ -57,6 +61,7 @@ type ChatState = {
   recentChats: UsersChat[];
   idArray: IDs[];
   recentBool: boolean;
+  receivedMessage: receivedMessage;
 };
 
 const state: ChatState = {
@@ -87,7 +92,8 @@ const state: ChatState = {
   latestChat: {} as UsersChat,
   recentChats: [],
   idArray: [],
-  recentBool: false
+  recentBool: false,
+  receivedMessage: {} as receivedMessage
 };
 
 export default createStore({
@@ -100,7 +106,6 @@ export default createStore({
       state.userToken = token;
     },
     setUserLogged(state, user) {
-      console.log('IN USER LOGGED IN MUTATION');
       state.userLogged = user;
       console.log('User State Logged in:', state.userLogged);
     },
@@ -116,7 +121,6 @@ export default createStore({
     },
     setCurrentChatUser(state, user) {
       state.currentChatUser = user;
-      console.log('Current Chat User in mutation:', state.currentChatUser);
     },
     setSearchUsersList(state, usersList) {
       state.searchUsersList = usersList;
@@ -133,7 +137,6 @@ export default createStore({
         chats = chats.reverse();
         state.usersChat = chats;
         state.latestChat = state.usersChat[0];
-        console.log('Users Chat List in mutation:', state.usersChat);
       }
     },
     setUserSelected(state, selected) {
@@ -144,13 +147,19 @@ export default createStore({
       state.getRecords += 10;
     },
     setIDs(state, IDs) {
-      state.idArray.push(IDs);
+      state.idArray = IDs;
     },
     setRecentChats(state, chats) {
+      console.log('STATE UPDATED');
       state.recentChats = [...state.recentChats, ...chats];
+      console.log('THE FUKING RECENT CHATS:', state.recentChats);
     },
     setRecentBool(state, bool) {
       state.recentBool = bool;
+    },
+    setReceivedMessage(state, message) {
+      state.receivedMessage = message;
+      console.log('RECEIVED MESSAGE: ', state.receivedMessage);
     }
   },
   actions: {
@@ -281,8 +290,9 @@ export default createStore({
     async addUserInChatList({ commit, dispatch }) {
       try {
         const data = {
-          receiverUserId: state.userLogged.userId,
-          senderUserId: state.currentChatUser.userId
+          receiverUserId: state.currentChatUser.userId,
+
+          senderUserId: state.userLogged.userId
         };
         console.log('THE CAP CHECK: ', data);
         const headers = {
@@ -358,9 +368,9 @@ export default createStore({
         console.log('An error occurred in sending message: ', error);
       }
     },
-    async getRecentChatsWithUser({ commit, dispatch }, IDs) {
+    async getRecentChatsWithUser({ commit, dispatch }, IDs, bool: boolean) {
       try {
-        console.log('IN FOKING CHATS');
+        console.log('IN FOKING CHATS', IDs);
         const data = {
           receiverId: IDs.receiveID,
           senderId: IDs.sendID,
@@ -378,6 +388,9 @@ export default createStore({
         if (response.data) {
           console.log('Getting recent chats of users: ', response.data.userChat);
           commit('setRecentChats', response.data.userChat);
+          if (bool) {
+            dispatch('getUserChatList');
+          }
         }
       } catch (error) {
         console.log('An error occurred in getting RECENT chats of users: ', error);
@@ -403,7 +416,7 @@ export default createStore({
       });
       commit('setIDs', newArrayOfObjects);
       console.log('THE NEW ARRAY OF IDs: ', state.idArray);
-      for (const IDs of newArrayOfObjects) {
+      for (const IDs of state.idArray) {
         console.log('THE ID:', IDs);
         await dispatch('getRecentChatsWithUser', IDs);
       }

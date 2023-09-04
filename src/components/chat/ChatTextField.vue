@@ -16,7 +16,12 @@ const newMessage = ref('');
 
 const sendMessage = () => {
   store.dispatch('sendMessage', newMessage.value).then(() => {
-    store.dispatch('getChatsWithUser');
+    store.dispatch('getChatsWithUser', false).then(() => {
+      for (const IDs of store.state.idArray) {
+        console.log('THE ID in search:', IDs);
+        store.dispatch('getRecentChatsWithUser', IDs);
+      }
+    });
   });
   newMessage.value = '';
 };

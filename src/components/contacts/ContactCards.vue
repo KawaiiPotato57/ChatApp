@@ -1,3 +1,4 @@
+@ts-ignore
 <template>
   <div class="chatBar" v-if="contactsCheck">
     <div
@@ -16,9 +17,11 @@
         <div class="contactName">{{ contact.userMobileNo }}</div>
         <!-- <div class="lastMessage">{{ latestMsg }}</div> -->
       </div>
-      <div>
-        <div class="lastMessage">{{ 'Hey' }}</div>
-        <div class="messageTime">{{ '12.00 pm' }}</div>
+      <div class="latestDiv">
+        <div class="lastMessage">
+          {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
+        </div>
+        <div class="messageTime">{{ mappedLatestMsg[contact.userId]?.dateTime || '12.00 pm' }}</div>
       </div>
       <!-- <div class="messageTime">{{ localTime }}</div> -->
     </div>
@@ -38,32 +41,38 @@ const store = useStore();
 const props = defineProps({
   isValue: Boolean
 });
-
+const isValueComputed = computed(() => props.isValue);
+const loadContacts = computed(() => contacts.value);
+const loadedSearch = computed(() => store.state.loadedSearch);
+const boolChan = computed(() => store.state.recentBool);
 const latestMsg1 = ref();
-console.log('THE recent', latestMsg1.value);
+const recentChats = computed(() => store.state.recentChats);
+
+let isInitialRun = true;
 const getTheChats = () => {
   latestMsg1.value = latestMsg1.value.map((chat: any) => {
     return {
-      dateTime: chat.dateTime,
+      receiverID: chat.receiverId,
+      dateTime: toLocalDate(chat.dateTime),
       msg: chat.msg
     };
   });
   console.log('MSG1:', latestMsg1.value);
 };
-// const recentCHATS = computed(() =>
-//   store.state.latestChat.map((chat) => {
-//     return {
-//       dateTime: chat.dateTime,
-//       msg: chat.msg
-//     };
-//   })
-// );
-// latestMsg.value = latestMssg.value.msg;
-// latestMsgTime.value = latestMssg.value.dateTime;
-// console.log('Latest Time', latestMsgTime.value);
-// const dateObject = new Date(latestMsgTime.value);
-// const localTime = dateObject.toLocaleTimeString();
+const recentMap = ref({});
+const mappedLatestMsg = computed(() => {
+  console.log('THE RECALCULATION');
+  const map = {};
+  latestMsg1.value.forEach((msg) => {
+    map[msg.receiverID] = msg; // Assuming 'userId' is a common attribute between latestMsg1 and contact.
+  });
+  return map;
+});
 
+const toLocalDate = (msgTime) => {
+  const dateObject = new Date(msgTime);
+  return dateObject.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 interface UserList {
   userId: number;
   userMobileNo: string;
@@ -83,36 +92,31 @@ const selectUser = (contact: UserList) => {
       });
     })
     .then(() => {
-      console.log('IN FOKING THEN');
       store.dispatch('getChatsWithUser', false);
     });
 };
+watch(
+  () => store.state.receivedMessage,
+  (newVal) => {
+    console.log('NARUTO', newVal);
+    store.dispatch('getUserChatList');
+  }
+);
+watch(
+  () => store.state.recentChats,
+  (newVal) => {
+    latestMsg1.value = newVal;
 
-function msToSec(milliseconds: number) {
-  return `${Math.round(milliseconds / 1000)} sec`;
-}
-const isValueComputed = computed(() => props.isValue);
-const loadContacts = computed(() => contacts.value);
-const loadedSearch = computed(() => store.state.loadedSearch);
-const boolChan = computed(() => store.state.recentBool);
-// watch(
-//   store.state.recentBool,
-//   (newVal) => {
-//     console.log('THE RECENT BOOLEAN: ', newVal);
-//     if (newVal) {
-//       latestMsg1.value = store.state.recentChats;
-//       console.log('THE RECENT', latestMsg1.value);
-//       getTheChats();
-//     }
-//   },
-//   { immediate: true }
-// );
+    console.log('THE RECENT', newVal);
+    getTheChats();
+    recentMap.value = mappedLatestMsg.value;
+  }
+);
 
 watch(
   [() => store.state.usersChatList, isValueComputed, loadedSearch, boolChan],
-  ([newVal, isValue, loadSearch, boolChan]) => {
+  ([newVal, isValue, loadSearch, boolChan], [oldVal, oldIsValue, oldLoadSearch, oldBoolChan]) => {
     if (isValue && loadSearch) {
-      console.log('THE LOADED BOOLEAN: ', loadedSearch.value);
       if (loadedSearch.value) {
         console.log('IN ELSEs IFFFF');
 
@@ -129,14 +133,23 @@ watch(
       console.log('IN IF', store.state.usersChatList);
       contacts.value = store.state.usersChatList.currentUserWithUsersChatlist;
 
-      console.log('THE RECENT', latestMsg1.value);
       console.log('The contacts loaded : ', contacts.value);
       // contactsCheck.value = contacts.value.length > 0;
       contactsCheck.value = true;
       if (boolChan) {
-        latestMsg1.value = store.state.recentChats;
-        console.log('THE RECENT', latestMsg1.value);
-        getTheChats();
+        // console.log('OLD RECENTS: ', oldRecents, 'RECENTS: ', recents);
+        // if (isInitialRun) {
+        //   latestMsg1.value = store.state.recentChats;
+        //   console.log('THE RECENT', latestMsg1.value);
+        //   getTheChats();
+        //   recentMap.value = mappedLatestMsg.value;
+        //   isInitialRun = false;
+        // } else {
+        //   latestMsg1.value = store.state.recentChats;
+        //   console.log('THE NEW RECENT', latestMsg1.value);
+        //   getTheChats();
+        //   recentMap.value = mappedLatestMsg.value;
+        // }
       }
     }
   },
@@ -203,20 +216,38 @@ watch(
 
 .contactDetails {
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
 .contactName {
   font-weight: bold;
+  padding-bottom: 20px;
 }
 
+.latestDiv {
+  position: relative;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column; /* changed from row to column */
+  align-items: flex-end;
+}
 .lastMessage {
+  position: absolute;
+  bottom: 0;
+  right: 220px;
+  top: 0px;
   color: rgb(48, 48, 48);
+  white-space: nowrap; /* Prevent wrapping to next line */
+  text-overflow: ellipsis; /* Show ellipsis when text is too long */
+  overflow: hidden; /* Hide the overflow */
+  max-width: 60px;
 }
 
 .messageTime {
   margin-left: auto;
+  justify-content: flex-end;
   color: rgb(48, 48, 48);
 }
 .imageWrapper {
