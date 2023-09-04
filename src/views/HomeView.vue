@@ -12,12 +12,8 @@ const store = useStore();
 const isCollapse = ref(true);
 const showAboutView = ref(true);
 const showChatContainer = ref(true);
-const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
-};
-const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
-};
+const handleOpen = (key: string, keyPath: string[]) => {};
+const handleClose = (key: string, keyPath: string[]) => {};
 
 const toggleCollapse = () => {
   isCollapse.value = !isCollapse.value;
@@ -35,6 +31,10 @@ const toggleAboutView = () => {
   if (window.innerWidth <= 1100) {
     showAboutView.value = !showAboutView.value;
     showChatContainer.value = !showAboutView.value;
+  } else {
+    showAboutView.value = !showAboutView.value;
+    showChatContainer.value = true;
+    console.log('IN about view', showAboutView.value);
   }
 };
 const logoutUser = () => {
@@ -54,9 +54,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main>
-    <h1>Chat App</h1>
-  </main>
   <div class="mainContainer">
     <div class="menuBar">
       <el-menu
@@ -101,7 +98,7 @@ onUnmounted(() => {
   width: 100%;
 }
 .menuBar {
-  height: 100%;
+  height: 80vh;
 }
 .icon {
   width: 25px;

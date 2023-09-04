@@ -15,20 +15,20 @@ const router = createRouter({
     {
       path: '/signin',
       name: 'signin',
-      component: SigninView,
-      meta: { auth: false }
+      component: SigninView
+      // meta: { auth: false }
     },
     {
       path: '/signup',
       name: 'signup',
-      component: SignUpView,
-      meta: { auth: false }
+      component: SignUpView
+      // meta: { auth: false }
     },
     {
       path: '/',
       name: 'home',
-      component: HomeView,
-      meta: { auth: true }
+      component: HomeView
+      // meta: { auth: true }
     },
     {
       path: '/contacts',

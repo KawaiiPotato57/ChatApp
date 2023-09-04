@@ -131,6 +131,7 @@ export default createStore({
     },
     setUsersChat(state, newChats) {
       if (newChats.length == 0) {
+        state.usersChat = newChats;
         console.log('No more chats to show');
       } else {
         let chats = newChats;
@@ -314,12 +315,6 @@ export default createStore({
     },
     async getChatsWithUser({ commit, dispatch }, bool: boolean) {
       try {
-        // const data = {
-        //   receiverId: state.currentChatUser.userId,
-        //   senderId: state.userLogged.userId,
-        //   skipRecords: state.skipRecords,
-        //   getRecords: state.getRecords
-        // };
         console.log('IN FOKING CHATS');
         const data = {
           receiverId: state.currentChatUser.userId,
@@ -336,6 +331,7 @@ export default createStore({
           headers
         });
         if (response.data) {
+          commit('setUsersChat', []);
           console.log('Getting all the 30 chats of users: ', response.data.userChat);
           commit('setUsersChat', response.data.userChat);
           if (bool) {

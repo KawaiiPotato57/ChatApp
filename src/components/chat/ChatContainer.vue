@@ -63,7 +63,7 @@ watch(
   () => store.state.currentChatUser,
   (newVal) => {
     contacts.value = newVal;
-    if (contacts.value) {
+    if (contacts.value && contacts.value) {
       contactsCheck.value = true;
     } else {
       contactsCheck.value = false;
@@ -96,11 +96,13 @@ const dummyMessage: ApiMessage[] = [
   }
 ];
 watch(
-  computedChats,
+  () => computedChats.value,
   (newChats) => {
     if (newChats) {
       updateChatMessages(newChats);
+      console.log('DUMMY', newChats);
       if (newChats.length <= 0) {
+        console.log('DUMMY', newChats);
         updateChatMessages(dummyMessage);
       }
     }
