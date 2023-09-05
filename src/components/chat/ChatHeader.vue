@@ -39,7 +39,6 @@ watch(
   () => store.state.currentChatUser,
   (newVal) => {
     contacts.value = newVal;
-    console.log('The contacts loaded:', contacts.value);
   },
   { immediate: true }
 );

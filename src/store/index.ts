@@ -131,7 +131,7 @@ export default createStore({
     },
     setUsersChat(state, newChats) {
       if (newChats.length == 0) {
-        console.log('No more chats to show');
+        state.usersChat = newChats;
       } else {
         let chats = newChats;
         chats = chats.reverse();
@@ -159,6 +159,7 @@ export default createStore({
     },
     setReceivedMessage(state, payload) {
       state.receivedMessage = [...state.receivedMessage, payload];
+      console.log('RECEIVED MESSAGES: ', state.receivedMessage);
     },
     setUnReadCount(state, payload) {
       state.receivedMessage = payload;
@@ -396,6 +397,57 @@ export default createStore({
         }
       } catch (error) {
         console.log('An error occurred in getting RECENT chats of users: ', error);
+      }
+    },
+    userGoesOffline({ commit, state }, payload) {
+      // payload should contain the userId of the user that has gone offline
+      const userId = payload;
+
+      // Updating usersChatList
+
+      const tempUsersChatList = state.usersChatList.currentUserWithUsersChatlist.map((user) => {
+        console.log('ALL USERS:', user);
+        if (user.userId === userId) {
+          console.log('Offline?', user);
+          return { ...user, isOnlineUser: false };
+        }
+        return user;
+      });
+
+      const updatedUsersChatList = {
+        ...state.usersChatList,
+        currentUserWithUsersChatlist: tempUsersChatList
+      };
+      console.log('Updated Users Chat List OFFLINE: ', updatedUsersChatList);
+      commit('setUsersList', updatedUsersChatList);
+
+      // Updating currentChatUser if it matches the userId
+      if (state.currentChatUser.userId === userId) {
+        commit('setCurrentChatUser', { ...state.currentChatUser, isOnlineUser: false });
+      }
+    },
+    userGoesOnline({ commit, state }, payload) {
+      // payload should contain the userId of the user that has gone offline
+      const userId = payload;
+      console.log('PAYLOAD', payload);
+      // Updating usersChatList
+      const tempUsersChatList = state.usersChatList.currentUserWithUsersChatlist.map((user) => {
+        if (user.userId === userId) {
+          return { ...user, isOnlineUser: true };
+        }
+        return user;
+      });
+      const updatedUsersChatList = {
+        ...state.usersChatList,
+        currentUserWithUsersChatlist: tempUsersChatList
+      };
+      console.log('Updated Users Chat List Online: ', updatedUsersChatList);
+
+      commit('setUsersList', updatedUsersChatList);
+
+      // Updating currentChatUser if it matches the userId
+      if (state.currentChatUser.userId === userId) {
+        commit('setCurrentChatUser', { ...state.currentChatUser, isOnlineUser: true });
       }
     },
     saveConnectionState({ commit, dispatch }, conId) {

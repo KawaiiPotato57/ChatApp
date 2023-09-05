@@ -12,14 +12,19 @@
       </div>
       <div class="contactDetails">
         <div class="contactName">{{ contact.userMobileNo }}</div>
-        {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
+        <!-- <div class="lastMessage">{{ latestMsg }}</div> -->
       </div>
       <div class="latestDiv">
-        <div class="lastMessage"></div>
+        <div class="lastMessage">
+          {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
+        </div>
         <div class="messageTime">
+          <span class="countClass" v-if="contact.newMsgCount > 0">
+            {{ contact.newMsgCount }}
+          </span>
           <span
             class="countClass"
-            v-if="
+            v-else-if="
               counters[contact.userId] > 0 &&
               store.state.receivedMessage.some((item) => item.userId === contact.userId)
             "
@@ -156,7 +161,7 @@ watch(
 watch(
   [() => store.state.usersChatList, isValueComputed, loadedSearch, boolChan],
   ([newVal, isValue, loadSearch, boolChan], [oldVal, oldIsValue, oldLoadSearch, oldBoolChan]) => {
-    if (isValue && loadSearch) {
+    if (isValue && loadedSearch.value) {
       if (loadedSearch.value) {
         console.log('IN ELSEs IFFFF');
 

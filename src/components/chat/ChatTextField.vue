@@ -1,6 +1,11 @@
 <template>
   <div class="inputArea">
-    <input type="text" v-model="newMessage" placeholder="Type a message" />
+    <input
+      type="text"
+      v-model="newMessage"
+      @keyup.enter="sendMessage"
+      placeholder="Type a message"
+    />
     <button @click="sendMessage" class="sendButton">
       <el-icon><Promotion /></el-icon>
     </button>

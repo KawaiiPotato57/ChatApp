@@ -45,7 +45,6 @@ const user = ref<User>({
 });
 
 const handleSubmit = () => {
-  console.log('THE USER:', user.value);
   try {
     store.dispatch('loginUser', user.value).then(() => {
       router.push('/');

@@ -43,12 +43,19 @@ export const signalRConnection = async () => {
       store.dispatch('saveConnectionState', signalr.connectionId).then(() => {
         store.dispatch('saveConnectionId');
       });
-      signalr.on('OnlineUser', (data) => {
-        console.log('User online');
-      });
+      // signalr.on('OnlineUser', (data) => {
+      //   console.log('User online', data);
+      //   store.dispatch('userGoesOnline', data);
+      // });
+      // signalr.on('OfflineUser', (data) => {
+      //   console.log('User offline', data);
+      //   console.log('TYPE OF,', store.state.usersChatList);
+      //   store.dispatch('userGoesOffline', data);
+      // });
+
       signalr.on('ReceiveMessage', (data) => {
         store.commit('setReceivedMessage', data);
-        // console.log('data', data);
+        console.log('data received', data);
         store.dispatch('getChatsWithUser', false);
       });
     })

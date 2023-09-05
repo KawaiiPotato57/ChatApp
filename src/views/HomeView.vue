@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { ChatRound, SwitchButton } from '@element-plus/icons-vue';
 import ContactsView from '../components/contacts/ContactsView.vue';
 import ChatContainer from '../components/chat/ChatContainer.vue';
@@ -8,7 +8,7 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 const router = useRouter();
 const store = useStore();
-
+const userSelected = computed(() => store.state.userSelected);
 const isCollapse = ref(true);
 const showAboutView = ref(true);
 const showChatContainer = ref(true);
@@ -35,6 +35,8 @@ const toggleAboutView = () => {
   if (window.innerWidth <= 1100) {
     showAboutView.value = !showAboutView.value;
     showChatContainer.value = !showAboutView.value;
+  } else {
+    showAboutView.value = !showAboutView.value;
   }
 };
 const logoutUser = () => {

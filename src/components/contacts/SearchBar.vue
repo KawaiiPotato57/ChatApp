@@ -67,7 +67,6 @@ const handleIconClick = (ev: Event) => {
     isValue.value = true;
     store.dispatch('searchUsers', state.value);
   }
-  console.log(state.value);
 };
 </script>
 
