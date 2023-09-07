@@ -8,7 +8,8 @@
       <div class="userName">
         {{ contacts?.userMobileNo }}
         <span style="font-size: smaller; font-weight: 400; color: rgb(67, 67, 67)"
-          >(Average Response Time: {{ contacts?.averageResponseTime }})</span
+          >(Average Response Time:
+          {{ `${(contacts?.averageResponseTime / 1000).toFixed(0)} secs` }})</span
         >
       </div>
       <div class="userStatus" v-if="contacts?.isOnlineUser" :class="contacts?.isOnlineUser">

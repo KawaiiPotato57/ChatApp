@@ -11,7 +11,7 @@ import SearchBar from './SearchBar.vue';
 
 <style>
 .about {
-  height: 80vh;
+  height: 100vh;
   width: 30%;
   display: flex;
   flex-direction: column;

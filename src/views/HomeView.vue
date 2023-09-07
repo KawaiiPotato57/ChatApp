@@ -56,9 +56,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main>
-    <h1>Chat App</h1>
-  </main>
+  <main></main>
   <div class="mainContainer">
     <div class="menuBar">
       <el-menu
@@ -104,6 +102,15 @@ onUnmounted(() => {
 }
 .menuBar {
   height: 100%;
+}
+.noChat {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+.el-menu-vertical-demo {
+  padding-top: 5vh;
 }
 .icon {
   width: 25px;
@@ -161,6 +168,9 @@ onUnmounted(() => {
     min-width: 200px;
     min-height: 80vh;
   }
+  .el-menu-vertical-demo {
+    padding-top: 3vh;
+  }
 }
 
 /* Small screens, typically large mobile devices */
@@ -181,10 +191,16 @@ onUnmounted(() => {
     min-width: 200px;
     min-height: 80vh;
   }
+  .el-menu-vertical-demo {
+    padding-top: 3vh;
+  }
 }
 
 /* Extra-small screens, typically small mobile devices */
 @media (max-width: 576px) {
+  .el-menu-vertical-demo {
+    padding-top: 3vh;
+  }
 }
 
 @media (max-width: 320px) {

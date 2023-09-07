@@ -98,6 +98,9 @@ const handleIconClick = (ev: Event) => {
 .transparent .el-input__inner {
   color: rgb(61, 61, 61);
 }
+.transparent .el-input__inner[type='text'] {
+  font-size: 14px;
+}
 .transparent .el-input__wrapper {
   border: 1px solid rgb(83, 83, 83);
   background-color: transparent;
@@ -143,6 +146,9 @@ const handleIconClick = (ev: Event) => {
     padding: 7px;
     margin: 7px;
   }
+  .transparent .el-input__inner[type='text'] {
+    font-size: 13px;
+  }
 }
 
 /* Medium screens, typically tablets */
@@ -157,6 +163,9 @@ const handleIconClick = (ev: Event) => {
   .my-autocomplete.el-popper li {
     padding: 6px;
     margin: 6px;
+  }
+  .transparent .el-input__inner[type='text'] {
+    font-size: 12px;
   }
 }
 
@@ -174,13 +183,15 @@ const handleIconClick = (ev: Event) => {
     padding: 5px;
     margin: 5px;
   }
+  .transparent .el-input__inner[type='text'] {
+    font-size: 12px;
+  }
 }
 
 /* Extra-small screens, typically small mobile devices */
 @media (max-width: 576px) {
   .searchDiv {
     padding: 6px;
-    padding-left: 30px;
   }
   .transparent .el-input__inner {
     width: 150px;
@@ -196,6 +207,10 @@ const handleIconClick = (ev: Event) => {
   }
   .my-autocomplete.el-popper li:hover {
     padding: 3px;
+  }
+  .transparent .el-input__inner[type='text'] {
+    font-size: 12px;
+    margin-left: 30px;
   }
 }
 

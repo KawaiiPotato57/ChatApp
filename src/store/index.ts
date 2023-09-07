@@ -62,6 +62,9 @@ type ChatState = {
   idArray: IDs[];
   recentBool: boolean;
   receivedMessage: receivedMessage[];
+  recentMapState: any;
+  userChanged: boolean;
+  messageSent: boolean;
 };
 
 const state: ChatState = {
@@ -93,7 +96,10 @@ const state: ChatState = {
   recentChats: [],
   idArray: [],
   recentBool: false,
-  receivedMessage: []
+  receivedMessage: [],
+  recentMapState: {},
+  userChanged: false,
+  messageSent: false
 };
 
 export default createStore({
@@ -121,6 +127,7 @@ export default createStore({
     },
     setCurrentChatUser(state, user) {
       state.currentChatUser = user;
+      console.log('Current Chat User ', state.currentChatUser);
     },
     setSearchUsersList(state, usersList) {
       state.searchUsersList = usersList;
@@ -130,14 +137,29 @@ export default createStore({
       state.loadedSearch = loaded;
     },
     setUsersChat(state, newChats) {
-      if (newChats.length == 0) {
+      console.log('In chat set before');
+      if (newChats.length === 0) {
+        console.log('In chat set if');
         state.usersChat = newChats;
       } else {
-        let chats = newChats;
-        chats = chats.reverse();
-        state.usersChat = chats;
+        // state.usersChat = [];
+        // let chats = newChats;
+        // chats = chats.reverse();
+        state.usersChat = newChats;
+        console.log('In chat set after', newChats);
         state.latestChat = state.usersChat[0];
       }
+    },
+    setEmptyChats(state) {
+      console.log('EMPTY CHATS');
+      state.currentChatUser = {} as UserList;
+
+      state.usersChat = [];
+      state.getRecords = 20;
+    },
+    setRecentChatsReset(state) {
+      console.log('THE FUKING RECENT CHATS hoooo: ', state.recentChats);
+      state.recentChats = [];
     },
     setUserSelected(state, selected) {
       state.userSelected = selected;
@@ -152,7 +174,8 @@ export default createStore({
     setRecentChats(state, chats) {
       console.log('STATE UPDATED');
       state.recentChats = [...state.recentChats, ...chats];
-      console.log('THE FUKING RECENT CHATS:', state.recentChats);
+      // state.recentChats = chats;
+      console.log('THE FUKING RECENT CHATS haaa:', state.recentChats);
     },
     setRecentBool(state, bool) {
       state.recentBool = bool;
@@ -163,6 +186,16 @@ export default createStore({
     },
     setUnReadCount(state, payload) {
       state.receivedMessage = payload;
+    },
+    setRecentMapState(state, payload) {
+      console.log('IN RECENT MAP STATE', payload);
+      state.recentMapState = payload;
+    },
+    setUserChanged(state, payload) {
+      state.userChanged = payload;
+    },
+    messageSent(state) {
+      state.messageSent = !state.messageSent;
     }
   },
   actions: {
@@ -261,7 +294,7 @@ export default createStore({
           if (state.usersChatList) {
             await dispatch('getIds');
           }
-          console.log('THE FUKING RECENT CHATS:', state.recentChats);
+          console.log('THE FUKING RECENT CHATS after:', state.recentChats);
           console.log('THE FUKING BOOLEAN:', state.recentBool);
         }
       } catch (error) {
@@ -315,12 +348,6 @@ export default createStore({
     },
     async getChatsWithUser({ commit, dispatch }, bool: boolean) {
       try {
-        // const data = {
-        //   receiverId: state.currentChatUser.userId,
-        //   senderId: state.userLogged.userId,
-        //   skipRecords: state.skipRecords,
-        //   getRecords: state.getRecords
-        // };
         console.log('IN FOKING CHATS');
         const data = {
           receiverId: state.currentChatUser.userId,
@@ -338,10 +365,10 @@ export default createStore({
         });
         if (response.data) {
           console.log('Getting all the 30 chats of users: ', response.data.userChat);
-          commit('setUsersChat', response.data.userChat);
           if (bool) {
             commit('updatePaginationState');
           }
+          commit('setUsersChat', response.data.userChat);
         }
       } catch (error) {
         console.log('An error occurred in getting chats of users: ', error);
@@ -364,6 +391,8 @@ export default createStore({
         });
         if (response.data) {
           console.log('Message Sent: ', response.data);
+          commit('messageSent');
+          commit('setRecentChatsReset');
           // commit('setUsersChat', response.data.userChat);
           // commit('updatePaginationState');
         }
@@ -371,12 +400,12 @@ export default createStore({
         console.log('An error occurred in sending message: ', error);
       }
     },
-    async getRecentChatsWithUser({ commit, dispatch }, IDs, bool: boolean) {
+    async getRecentChatsWithUser({ commit, dispatch }, payload) {
       try {
-        console.log('IN FOKING CHATS', IDs);
+        console.log('IN FOKING CHATS', payload.IDs);
         const data = {
-          receiverId: IDs.receiveID,
-          senderId: IDs.sendID,
+          receiverId: payload.IDs.receiveID,
+          senderId: payload.IDs.sendID,
           skipRecords: 0,
           getRecords: 1
         };
@@ -391,7 +420,7 @@ export default createStore({
         if (response.data) {
           console.log('Getting recent chats of users: ', response.data.userChat);
           commit('setRecentChats', response.data.userChat);
-          if (bool) {
+          if (payload.bool) {
             dispatch('getUserChatList');
           }
         }
@@ -431,20 +460,23 @@ export default createStore({
       const userId = payload;
       console.log('PAYLOAD', payload);
       // Updating usersChatList
-      const tempUsersChatList = state.usersChatList.currentUserWithUsersChatlist.map((user) => {
-        if (user.userId === userId) {
-          return { ...user, isOnlineUser: true };
-        }
-        return user;
-      });
-      const updatedUsersChatList = {
-        ...state.usersChatList,
-        currentUserWithUsersChatlist: tempUsersChatList
-      };
-      console.log('Updated Users Chat List Online: ', updatedUsersChatList);
+      if (state.usersChatList.currentUserWithUsersChatlist) {
+        const tempUsersChatList = state.usersChatList.currentUserWithUsersChatlist.map((user) => {
+          if (user.userId === userId) {
+            return { ...user, isOnlineUser: true };
+          }
+          return user;
+        });
+        const updatedUsersChatList = {
+          ...state.usersChatList,
+          currentUserWithUsersChatlist: tempUsersChatList
+        };
+        console.log('Updated Users Chat List Online: ', updatedUsersChatList);
 
-      commit('setUsersList', updatedUsersChatList);
-
+        commit('setUsersList', updatedUsersChatList);
+      } else {
+        console.log('new login');
+      }
       // Updating currentChatUser if it matches the userId
       if (state.currentChatUser.userId === userId) {
         commit('setCurrentChatUser', { ...state.currentChatUser, isOnlineUser: true });
@@ -455,7 +487,10 @@ export default createStore({
       console.log('connectionId in store: ', state.connectionId);
     },
     setCurrentUser({ commit, dispatch }, user) {
+      commit('setUserChanged', false);
+      commit('setEmptyChats');
       commit('setCurrentChatUser', user);
+      commit('setUserChanged', true);
       commit('setUserSelected', true);
       console.log('Current Chat User:', state.currentChatUser);
     },
@@ -470,9 +505,10 @@ export default createStore({
       });
       commit('setIDs', newArrayOfObjects);
       console.log('THE NEW ARRAY OF IDs: ', state.idArray);
+      commit('setRecentChatsReset')
       for (const IDs of state.idArray) {
         console.log('THE ID:', IDs);
-        await dispatch('getRecentChatsWithUser', IDs);
+        await dispatch('getRecentChatsWithUser', { IDs, bool: false });
       }
       commit('setRecentBool', true);
     },
@@ -481,6 +517,10 @@ export default createStore({
       const filteredMessages = state.receivedMessage.filter((message) => message.userId !== userId);
       console.log('AFTER FILTERING', filteredMessages);
       commit('setUnReadCount', filteredMessages);
+    },
+    recentMapAction({ commit, dispatch }, payload) {
+      console.log('In map action', payload);
+      commit('setRecentMapState', payload);
     }
   },
 

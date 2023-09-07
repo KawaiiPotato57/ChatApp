@@ -13,11 +13,11 @@
       <div class="contactDetails">
         <div class="contactName">{{ contact.userMobileNo }}</div>
         <!-- <div class="lastMessage">{{ latestMsg }}</div> -->
+        <div class="lastMessage">
+          {{ recentMap[contact.userId]?.msg || 'Hey Call me..!' }}
+        </div>
       </div>
       <div class="latestDiv">
-        <div class="lastMessage">
-          {{ mappedLatestMsg[contact.userId]?.msg || 'Hey Call me..!' }}
-        </div>
         <div class="messageTime">
           <span class="countClass" v-if="contact.newMsgCount > 0">
             {{ contact.newMsgCount }}
@@ -30,7 +30,7 @@
             "
             >{{ counters[contact.userId] }}</span
           >
-          {{ mappedLatestMsg[contact.userId]?.dateTime || '12.00 pm' }}
+          {{ recentMap[contact.userId]?.dateTime || '12.00 pm' }}
         </div>
       </div>
     </div>
@@ -68,9 +68,14 @@ interface UserList {
 }
 
 received.value = receivedMssg.value;
-
+const toLocalDate = (msgTime: string | number | Date) => {
+  const dateObject = new Date(msgTime);
+  return dateObject.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 let isInitialRun = true;
 const getTheChats = () => {
+  console.log('MSG2:', latestMsg1.value);
+
   latestMsg1.value = latestMsg1.value.map((chat: any) => {
     return {
       receiverID: chat.receiverId,
@@ -85,27 +90,53 @@ const recentMap = ref({});
 const mappedLatestMsg = computed(() => {
   console.log('THE RECALCULATION');
   const map = {};
-  latestMsg1.value.forEach((msg: { receiverID: string | number }) => {
+
+  // latestMsg1.value.forEach((msg: { receiverID: string | number }) => {
+  //   map[msg.receiverID] = msg; // Assuming 'userId' is a common attribute between latestMsg1 and contact.
+  // });
+  latestMsg1.value.forEach((msg) => {
     map[msg.receiverID] = msg; // Assuming 'userId' is a common attribute between latestMsg1 and contact.
   });
+
   return map;
 });
 
-const toLocalDate = (msgTime: string | number | Date) => {
-  const dateObject = new Date(msgTime);
-  return dateObject.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
+watch(
+  () => [store.state.recentChats, store.state.recentBool],
+  ([newVal, boolFlag]) => {
+    console.log('BoolFlag', boolFlag);
+    if (boolFlag) {
+      // Only run this logic if store.state.recentBool is true
+      if (Object.keys(store.state.recentMapState).length !== 0) {
+        // Merge values from Vuex store with current recentMap
+        console.log('Recent map bool before ', recentMap.value);
+        // recentMap.value = { ...recentMap.value, ...store.state.recentMapState };
+        recentMap.value = store.state.recentMapState;
+        console.log('Recent map bool after ', recentMap.value);
+      } else {
+        // Regular logic if Vuex store is empty
+        console.log(' map Bool Else');
+        latestMsg1.value = newVal;
+        getTheChats();
+        recentMap.value = { ...recentMap.value, ...mappedLatestMsg.value };
+        store.dispatch('recentMapAction', recentMap.value);
+      }
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const contacts = ref<UserList[]>([]);
 const contactsCheck = ref(false);
 const selectUser = (contact: UserList) => {
   counters.value[contact.userId] = 0;
+  console.log('In card select');
   store.dispatch('removeCount', contact.userId);
   store
     .dispatch('setCurrentUser', contact)
     .then(() => {
       store.dispatch('addUserInChatList').then(() => {
-        store.dispatch('getUserChatList');
+        store.dispatch('getUserChatList', false);
       });
     })
     .then(() => {
@@ -120,6 +151,7 @@ watch(
   () => store.state.receivedMessage,
   (val) => {
     // Reset the counters for all users
+    console.log('MESSAGE RECEIVED WATCH', val);
     for (const userId in counters.value) {
       counters.value[userId] = 0;
     }
@@ -147,16 +179,23 @@ watch(
     store.dispatch('getUserChatList');
   }
 );
-watch(
-  () => store.state.recentChats,
-  (newVal) => {
-    latestMsg1.value = newVal;
 
-    console.log('THE RECENT', newVal);
-    getTheChats();
-    recentMap.value = mappedLatestMsg.value;
-  }
-);
+// watch(
+//   () => store.state.recentChats,
+
+//   (newVal) => {
+//     if (Object.keys(store.state.recentMapState).length !== 0) {
+//       // Merge values from Vuex store with current recentMap
+//       recentMap.value = { ...recentMap.value, ...store.state.recentMapState };
+//     } else {
+//       // Regular logic if Vuex store is empty
+//       latestMsg1.value = newVal;
+//       getTheChats();
+//       recentMap.value = { ...recentMap.value, ...mappedLatestMsg.value };
+//       store.dispatch('recentMapAction', recentMap.value);
+//     }
+//   }
+// );
 
 watch(
   [() => store.state.usersChatList, isValueComputed, loadedSearch, boolChan],
@@ -275,15 +314,10 @@ watch(
 }
 
 .lastMessage {
-  position: absolute;
-  bottom: 0;
-  right: 220px;
-  top: 0px;
   color: rgb(48, 48, 48);
   white-space: nowrap; /* Prevent wrapping to next line */
   text-overflow: ellipsis; /* Show ellipsis when text is too long */
   overflow: hidden; /* Hide the overflow */
-  max-width: 60px;
 }
 
 .messageTime {
